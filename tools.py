@@ -1,6 +1,29 @@
 from langchain_core.tools import tool
 
 # ==============================================================================
+# HÀM BỔ TRỢ: CHUẨN HÓA TÊN THÀNH PHỐ
+# Giúp xử lý các cách gọi khác nhau: Sài Gòn -> Hồ Chí Minh, hn -> Hà Nội, v.v.
+# ==============================================================================
+def normalize_city(name: str) -> str:
+    if not name:
+        return name
+    name = name.strip().lower()
+    
+    mapping = {
+        "hồ chí minh": ["hồ chí minh", "ho chi minh", "sài gòn", "sai gon", "hcm", "tphcm", "tp hcm", "tp.hcm", "tp. hcm"],
+        "hà nội": ["hà nội", "ha noi", "hn", "hanoi"],
+        "đà nẵng": ["đà nẵng", "da nang", "dn", "danang"],
+        "phú quốc": ["phú quốc", "phu quoc", "pq", "phuquoc"]
+    }
+    
+    for canonical_name, synonyms in mapping.items():
+        if name in synonyms:
+            # Trả về định dạng chuẩn (Viết hoa chữ cái đầu cho đẹp)
+            return canonical_name.title() if canonical_name != "hồ chí minh" else "Hồ Chí Minh"
+            
+    return name.title() # Nếu không tìm thấy, trả về dạng viết hoa chữ cái đầu
+
+# ==============================================================================
 # MOCK DATA — Dữ liệu giả lập hệ thống du lịch
 # Lưu ý: Giá cả có logic (VD: cuối tuần đắt hơn, hạng cao hơn đắt hơn)
 # ==============================================================================
@@ -60,14 +83,10 @@ def format_currency(amount):
 
 @tool
 def search_flights(origin: str, destination: str) -> str:
-    """
-    Tìm kiếm các chuyến bay giữa hai thành phố.
-    Tham số:
-    - origin: thành phố khởi hành (VD: 'Hà Nội', 'Hồ Chí Minh')
-    - destination: thành phố đến (VD: 'Đà Nẵng', 'Phú Quốc')
-    """
-    origin = origin.strip()
-    destination = destination.strip()
+    """Tra cứu thông tin chuyến bay và giá vé giữa hai thành phố."""
+    # Chuẩn hóa tên thành phố trước khi tra cứu
+    origin = normalize_city(origin)
+    destination = normalize_city(destination)
     
     flights = FLIGHTS_DB.get((origin, destination))
     
@@ -88,13 +107,10 @@ def search_flights(origin: str, destination: str) -> str:
 
 @tool
 def search_hotels(city: str, max_price_per_night: int = 99999999) -> str:
-    """
-    Tìm kiếm khách sạn tại một thành phố, có thể lọc theo giá tối đa mỗi đêm.
-    Tham số:
-    - city: tên thành phố (VD: 'Đà Nẵng', 'Phú Quốc', 'Hồ Chí Minh')
-    - max_price_per_night: giá tối đa mỗi đêm (VNĐ)
-    """
-    city = city.strip()
+    """Tra cứu danh sách khách sạn tại một thành phố (có thể lọc theo giá nếu có)."""
+    # Chuẩn hóa tên thành phố trước khi tra cứu
+    city = normalize_city(city)
+    
     hotels = HOTELS_DB.get(city)
     
     if not hotels:

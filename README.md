@@ -37,7 +37,7 @@ python agent.py
 
 ---
 
-## Cau truc thư mục
+## Cấu trúc thư mục
 
 - agent.py: File thực thi chính, định nghĩa đồ thị LangGraph và vòng lặp trò chuyện.
 - tools.py: Định nghĩa các công cụ (Mock Tools) và cơ sở dữ liệu giả lập.
